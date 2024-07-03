@@ -22,6 +22,8 @@ With `Powershell` :
 if (!(Test-Path $env:APPDATA\yazi\config\plugins\)) {mkdir $env:APPDATA\yazi\config\plugins\}
 git clone https://github.com/DreamMaoMao/gitstatus.yazi.git $env:APPDATA\yazi\config\plugins\gitstatus.yazi
 ```
+# Dependcy
+- git
 
 # Usage 
 
