@@ -27,7 +27,8 @@ Add this to ~/.config/yazi/init.lua
 
 ```
 require("message-custiom"):setup{
-    folder_size_ignore = {"/home/user"},
-    gitstatus_ignore = {"/home/user"}
+    folder_size_ignore = {"/home/wrq","/"},
+    gitstatus_ignore = {"/home/wrq","/"},
+    enable_folder_size = false
 }
 ```

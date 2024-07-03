@@ -39,6 +39,9 @@ local set_opts_default = ya.sync(function(state)
 	if (state.opt_gitstatus_ignore == nil) then
 		state.opt_gitstatus_ignore = {}
 	end
+	if (state.opt_enable_folder_size == nil) then
+		state.opt_enable_folder_size = false
+	end
 end)
 
 return {
@@ -51,6 +54,9 @@ return {
 		end
 		if (opts ~= nil and opts.gitstatus_ignore ~= nil ) then
 			st.opt_gitstatus_ignore  = opts.gitstatus_ignore
+		end
+		if (opts ~= nil and opts.enable_folder_size ~= nil ) then
+			st.opt_enable_folder_size  = opts.enable_folder_size
 		end
 
 		function File:symlink(file)
@@ -111,7 +117,7 @@ return {
 		end
 	end,
 
-	entry = function(_, args)
+	entry = function(state, args)
 		local output
 
 		local git_branch  = ""
@@ -145,7 +151,7 @@ return {
 		end
 
 		local folder_size = ""
-		if args[2] ~= "true" then
+		if args[2] ~= "true" and state.opt_enable_folder_size then
 			output = Command("du"):args({"-sh",args[1].."/"}):output()
 		else
 			output = nil
