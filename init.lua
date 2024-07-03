@@ -10,6 +10,7 @@ end
 
 local function make_git_table(git_is_dirty)
 	local file_table = {}
+	local git_status
 	local split_table = string_split(git_is_dirty:sub(1,-2),"\n")
 	for _, value in ipairs(split_table) do
 		split_value = string_split(value," ")
@@ -17,7 +18,14 @@ local function make_git_table(git_is_dirty)
 			split_value = string_split(value,"  ")
 		end
 
-		file_table[split_value[#split_value]] = split_value[#split_value - 1] == "??" and "U" or split_value[#split_value - 1]
+		if split_value[#split_value - 1] == "??" then 
+			git_status = "U"
+		elseif split_value[#split_value - 1] == "!!" then
+			git_status = "I"
+		else
+			git_status = split_value[#split_value - 1]
+		end
+		file_table[split_value[#split_value]] = git_status
 	end
 	return file_table
 end
@@ -142,7 +150,7 @@ return {
 		local git_is_dirty = ""
 		local git_file_status = nil
 		if args[3] ~= "true" then
-			local command = "git status -s --ignore-submodules=dirty 2> /dev/null" 
+			local command = "git status --ignored -s --ignore-submodules=dirty 2> /dev/null" 
 			local file = io.popen(command, "r")
 			output = file:read("*a") 
 			file:close()
