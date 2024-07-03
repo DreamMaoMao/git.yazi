@@ -67,7 +67,7 @@ return {
 			local git_span = {}
 
 			if st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
-				local name = file.name:gsub("\r", "?", 1)
+				local name = file.cha.is_dir and file.name:gsub("\r", "?", 1).."/" or file.name:gsub("\r", "?", 1)
 				if file:is_hovered() then
 					git_span = st.git_file_status[name] and {ui.Span(" ["),ui.Span(st.git_file_status[name]),ui.Span("]")}				
 				else
