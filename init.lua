@@ -103,7 +103,6 @@ return {
 		end
 
 		local folder_size = ""
-		ya.err(args[2])
 		if args[2] ~= "true" then
 			output = Command("du"):args({"-sh",args[1].."/"}):output()
 		else
@@ -112,7 +111,6 @@ return {
 		if output then
 			local split_output = string_split(output.stdout,"\t")
 			folder_size = split_output[1]
-			ya.err(folder_size)
 		end		
 
 		save(args[1], git_branch,git_is_dirty,folder_size)
