@@ -8,9 +8,10 @@ local function string_split(input,delimiter)
 	return result
 end
 
-local save = ya.sync(function(st, cwd, git_branch)
+local save = ya.sync(function(st, cwd, git_branch,git_is_dirty)
 	if cx.active.current.cwd == Url(cwd) then
 		st.git_branch = git_branch
+		st.git_is_dirty = git_is_dirty
 		ya.render()
 	end
 end)
@@ -20,7 +21,8 @@ return {
 		
 		function Header:cwd(max)
 			local cwd = cx.active.current.cwd
-			local git_span = (st.git_branch and st.git_branch ~= "") and ui.Span(" <".. st.git_branch .. ">"):fg("#c6ca4a") or {}
+			local git_is_dirty = (st.git_is_dirty ~= "" and st.git_is_dirty ~= "") and "*" or ""
+			local git_span = (st.git_branch and st.git_branch ~= "") and ui.Span(" <".. st.git_branch .. git_is_dirty .. ">"):fg("#c6ca4a") or {}
 			local s = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
 			if st.cwd ~= cwd then
 				st.cwd = cwd
@@ -43,6 +45,16 @@ return {
 			git_branch = split_output[3]
 		end
 		
-		save(args[1], git_branch)
+		local git_is_dirty = ""
+		local command = "git status -s --ignore-submodules=dirty 2> /dev/null" 
+		local file = io.popen(command, "r")
+		local output = file:read("*a") 
+		file:close()
+		if output ~= nil and  output ~= "" then
+			
+			git_is_dirty = output
+		end
+
+		save(args[1], git_branch,git_is_dirty)
 	end,
 }
