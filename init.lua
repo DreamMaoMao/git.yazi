@@ -22,7 +22,7 @@ local set_opts_default = ya.sync(function(state)
 		state.opt_folder_size_ignore = {}
 	end
 	if (state.opt_gitstatus_ignore == nil) then
-		state.gitstatus_ignore = {}
+		state.opt_gitstatus_ignore = {}
 	end
 end)
 
