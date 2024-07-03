@@ -23,8 +23,8 @@ Add this to ~/.config/yazi/init.lua
 
 ```
 require("git-status"):setup{
-    folder_size_ignore = {"/home/wrq","/"},
-    gitstatus_ignore = {"/home/wrq","/"},
+    folder_size_ignore = {"/home/user","/"},
+    gitstatus_ignore = {"/home/user","/"},
     enable_folder_size = false
 }
 ```
