@@ -1,5 +1,5 @@
 # gitstatus.yazi
-gitstatus prompt plugin for Yazi,
+message prompt plugin for Yazi,
 
 Asynchronous task loading without blocking the rendering of other components
 
