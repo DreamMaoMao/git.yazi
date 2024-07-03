@@ -3,11 +3,7 @@ git message prompt plugin for Yazi,
 
 Asynchronous task loading without blocking the rendering of other components
 
-![image](https://github.com/DreamMaoMao/git-status.yazi/assets/30348075/7eeed54b-e7b0-4eb8-bf02-5e9de84d1a7b)
-
-
-
-https://github.com/DreamMaoMao/git-status.yazi/assets/30348075/44a7da1c-b135-472b-9c5b-d2f4f1fd48b6
+![image](https://github.com/DreamMaoMao/git-status.yazi/assets/30348075/8f3c2bdd-355a-405f-8a20-b390849c5882)
 
 
 # Install 
