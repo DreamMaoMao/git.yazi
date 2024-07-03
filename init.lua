@@ -8,11 +8,26 @@ local function string_split(input,delimiter)
 	return result
 end
 
-local save = ya.sync(function(st, cwd, git_branch,git_is_dirty,folder_size)
+local function make_git_table(git_is_dirty)
+	local file_table = {}
+	local split_table = string_split(git_is_dirty:sub(1,-2),"\n")
+	for _, value in ipairs(split_table) do
+		split_value = string_split(value," ")
+		if split_value[#split_value - 1] == "" then
+			split_value = string_split(value,"  ")
+		end
+
+		file_table[split_value[#split_value]] = split_value[#split_value - 1] == "??" and "U" or split_value[#split_value - 1]
+	end
+	return file_table
+end
+
+local save = ya.sync(function(st, cwd, git_branch,git_is_dirty,folder_size,git_file_status)
 	if cx.active.current.cwd == Url(cwd) then
 		st.git_branch = git_branch
 		st.git_is_dirty = git_is_dirty
 		st.folder_size = folder_size
+		st.git_file_status = git_file_status
 		ya.render()
 	end
 end)
@@ -36,6 +51,24 @@ return {
 		end
 		if (opts ~= nil and opts.gitstatus_ignore ~= nil ) then
 			st.opt_gitstatus_ignore  = opts.gitstatus_ignore
+		end
+
+		function File:symlink(file)
+			if not MANAGER.show_symlink and (st.git_is_dirty == nil or st.git_is_dirty == "") then
+				return {}
+			elseif not MANAGER.show_symlink and st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
+				local name = file.name:gsub("\r", "?", 1)
+				local git_span = st.git_file_status[name] and {ui.Span(" ["):fg("#98ca65"),ui.Span(st.git_file_status[name]):fg("#98ca65"),ui.Span("]"):fg("#98ca65")} or {}
+				return git_span
+			elseif MANAGER.show_symlink and st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
+				local name = file.name:gsub("\r", "?", 1)
+				local git_span = st.git_file_status[name] and {ui.Span(" ["):fg("#98ca65"),ui.Span(st.git_file_status[name]):fg("#98ca65"),ui.Span("]"):fg("#98ca65")} or {}
+				local to = file.link_to
+				return to and {git_span, ui.Span(" -> " .. tostring(to)):italic() } or {git_span}
+			else
+				local to = file.link_to
+				return to and { ui.Span(" -> " .. tostring(to)):italic() } or {}
+			end
 		end
 
 		function Header:cwd(max)
@@ -90,6 +123,7 @@ return {
 		end
 		
 		local git_is_dirty = ""
+		local git_file_status = nil
 		if args[3] ~= "true" then
 			local command = "git status -s --ignore-submodules=dirty 2> /dev/null" 
 			local file = io.popen(command, "r")
@@ -100,6 +134,7 @@ return {
 		end
 		if output ~= nil and  output ~= "" then
 			git_is_dirty = output
+			git_file_status = make_git_table(git_is_dirty)
 		end
 
 		local folder_size = ""
@@ -113,6 +148,6 @@ return {
 			folder_size = split_output[1]
 		end		
 
-		save(args[1], git_branch,git_is_dirty,folder_size)
+		save(args[1], git_branch,git_is_dirty,folder_size,git_file_status)
 	end,
 }
