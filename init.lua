@@ -8,10 +8,11 @@ local function string_split(input,delimiter)
 	return result
 end
 
-local function make_git_table(git_is_dirty)
+local function make_git_table(git_status_str)
 	local file_table = {}
 	local git_status
-	local split_table = string_split(git_is_dirty:sub(1,-2),"\n")
+	local is_dirty = false
+	local split_table = string_split(git_status_str:sub(1,-2),"\n")
 	for _, value in ipairs(split_table) do
 		split_value = string_split(value," ")
 		if split_value[#split_value - 1] == "" then
@@ -20,22 +21,25 @@ local function make_git_table(git_is_dirty)
 
 		if split_value[#split_value - 1] == "??" then 
 			git_status = "U"
+			is_dirty = true
 		elseif split_value[#split_value - 1] == "!!" then
 			git_status = "I"
 		else
 			git_status = split_value[#split_value - 1]
+			is_dirty = true
 		end
 		file_table[split_value[#split_value]] = git_status
 	end
-	return file_table
+	return file_table,is_dirty
 end
 
-local save = ya.sync(function(st, cwd, git_branch,git_is_dirty,folder_size,git_file_status)
+local save = ya.sync(function(st, cwd, git_branch,git_status_str,folder_size,git_file_status,git_is_dirty)
 	if cx.active.current.cwd == Url(cwd) then
 		st.git_branch = git_branch
-		st.git_is_dirty = git_is_dirty
+		st.git_status_str = git_status_str
 		st.folder_size = folder_size
 		st.git_file_status = git_file_status
+		st.git_is_dirty = git_is_dirty
 		ya.render()
 	end
 end)
@@ -74,7 +78,7 @@ return {
 		function File:symlink(file)
 			local git_span = {}
 
-			if st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
+			if st.git_status_str ~= nil and st.git_status_str ~= "" then
 				local name = file.cha.is_dir and file.name:gsub("\r", "?", 1).."/" or file.name:gsub("\r", "?", 1)
 				if file:is_hovered() then
 					git_span = st.git_file_status[name] and {ui.Span(" ["),ui.Span(st.git_file_status[name]),ui.Span("]")}				
@@ -83,11 +87,11 @@ return {
 				end
 			end
 
-			if not MANAGER.show_symlink and (st.git_is_dirty == nil or st.git_is_dirty == "") then
+			if not MANAGER.show_symlink and (st.git_status_str == nil or st.git_status_str == "") then
 				return {}
-			elseif not MANAGER.show_symlink and st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
+			elseif not MANAGER.show_symlink and st.git_status_str ~= nil and st.git_status_str ~= "" then
 				return git_span
-			elseif MANAGER.show_symlink and st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
+			elseif MANAGER.show_symlink and st.git_status_str ~= nil and st.git_status_str ~= "" then
 				local to = file.link_to
 				return to and {git_span, ui.Span(" -> " .. tostring(to)):italic() } or {git_span}
 			else
@@ -119,7 +123,7 @@ return {
 				st.cwd = cwd
 				ya.manager_emit("plugin", { st._name, args = ya.quote(tostring(cwd)).." "..tostring(ignore_caculate_size).." ".. tostring(ignore_gitstatus) })
 			else
-				local git_is_dirty = (st.git_is_dirty ~= nil and st.git_is_dirty ~= "") and "*" or ""
+				local git_is_dirty = st.git_is_dirty  and "*" or ""
 				git_span = (st.git_branch and st.git_branch ~= "") and ui.Span(" <".. st.git_branch .. git_is_dirty .. ">"):fg("#c6ca4a") or {}				
 			end
 
@@ -131,6 +135,7 @@ return {
 
 	entry = function(_, args)
 		local output
+		local git_is_dirty
 
 		local git_branch  = ""
 		if args[3] ~= "true" then
@@ -147,7 +152,7 @@ return {
 			git_branch = split_output[3]
 		end
 		
-		local git_is_dirty = ""
+		local git_status_str = ""
 		local git_file_status = nil
 		if args[3] ~= "true" then
 			local command = "git status --ignored -s --ignore-submodules=dirty 2> /dev/null" 
@@ -158,8 +163,8 @@ return {
 			output = nil
 		end
 		if output ~= nil and  output ~= "" then
-			git_is_dirty = output
-			git_file_status = make_git_table(git_is_dirty)
+			git_status_str = output
+			git_file_status,git_is_dirty = make_git_table(git_status_str)
 		end
 
 		local folder_size = ""
@@ -173,6 +178,6 @@ return {
 			folder_size = split_output[1]
 		end		
 
-		save(args[1], git_branch,git_is_dirty,folder_size,git_file_status)
+		save(args[1], git_branch,git_status_str,folder_size,git_file_status,git_is_dirty)
 	end,
 }
