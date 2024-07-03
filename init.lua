@@ -20,14 +20,18 @@ return {
 	setup = function(st)
 		
 		function Header:cwd(max)
+			local git_span = {}
 			local cwd = cx.active.current.cwd
-			local git_is_dirty = (st.git_is_dirty ~= "" and st.git_is_dirty ~= "") and "*" or ""
-			local git_span = (st.git_branch and st.git_branch ~= "") and ui.Span(" <".. st.git_branch .. git_is_dirty .. ">"):fg("#c6ca4a") or {}
-			local s = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
 			if st.cwd ~= cwd then
 				st.cwd = cwd
 				ya.manager_emit("plugin", { st._name, args = ya.quote(tostring(cwd)) })
+			else
+				local git_is_dirty = (st.git_is_dirty ~= "" and st.git_is_dirty ~= "") and "*" or ""
+				git_span = (st.git_branch and st.git_branch ~= "") and ui.Span(" <".. st.git_branch .. git_is_dirty .. ">"):fg("#c6ca4a") or {}				
 			end
+
+			local s = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
+
 			return ui.Line{ui.Span(ya.truncate(s, { max = max, rtl = true }) ):style(THEME.manager.cwd),git_span}
 		end
 	end,
