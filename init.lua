@@ -54,15 +54,22 @@ return {
 		end
 
 		function File:symlink(file)
+			local git_span = {}
+
+			if st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
+				local name = file.name:gsub("\r", "?", 1)
+				if file:is_hovered() then
+					git_span = st.git_file_status[name] and {ui.Span(" ["),ui.Span(st.git_file_status[name]),ui.Span("]")}				
+				else
+					git_span = st.git_file_status[name] and {ui.Span(" ["):fg("#98ca65"),ui.Span(st.git_file_status[name]):fg("#98ca65"),ui.Span("]"):fg("#98ca65")}
+				end
+			end
+
 			if not MANAGER.show_symlink and (st.git_is_dirty == nil or st.git_is_dirty == "") then
 				return {}
 			elseif not MANAGER.show_symlink and st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
-				local name = file.name:gsub("\r", "?", 1)
-				local git_span = st.git_file_status[name] and {ui.Span(" ["):fg("#98ca65"),ui.Span(st.git_file_status[name]):fg("#98ca65"),ui.Span("]"):fg("#98ca65")} or {}
 				return git_span
 			elseif MANAGER.show_symlink and st.git_is_dirty ~= nil and st.git_is_dirty ~= "" then
-				local name = file.name:gsub("\r", "?", 1)
-				local git_span = st.git_file_status[name] and {ui.Span(" ["):fg("#98ca65"),ui.Span(st.git_file_status[name]):fg("#98ca65"),ui.Span("]"):fg("#98ca65")} or {}
 				local to = file.link_to
 				return to and {git_span, ui.Span(" -> " .. tostring(to)):italic() } or {git_span}
 			else
