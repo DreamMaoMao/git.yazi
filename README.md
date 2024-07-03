@@ -3,6 +3,8 @@ gitstatus prompt plugin for Yazi,
 
 Asynchronous task loading without blocking the rendering of other components
 
+![image](https://github.com/DreamMaoMao/gitstatus.yazi/assets/30348075/7eeed54b-e7b0-4eb8-bf02-5e9de84d1a7b)
+
 
 # Install 
 
