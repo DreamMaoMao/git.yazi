@@ -32,6 +32,10 @@ local save = ya.sync(function(st, cwd, git_branch,git_is_dirty,folder_size,git_f
 	end
 end)
 
+local enable_file_size = ya.sync(function(st)
+	return st.opt_enable_folder_size
+end)
+
 local set_opts_default = ya.sync(function(state)
 	if (state.opt_folder_size_ignore == nil) then
 		state.opt_folder_size_ignore = {}
@@ -117,7 +121,7 @@ return {
 		end
 	end,
 
-	entry = function(state, args)
+	entry = function(_, args)
 		local output
 
 		local git_branch  = ""
@@ -151,7 +155,7 @@ return {
 		end
 
 		local folder_size = ""
-		if args[2] ~= "true" and state.opt_enable_folder_size then
+		if args[2] ~= "true" and enable_file_size() then
 			output = Command("du"):args({"-sh",args[1].."/"}):output()
 		else
 			output = nil
