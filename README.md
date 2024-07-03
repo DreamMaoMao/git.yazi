@@ -30,5 +30,8 @@ git clone https://github.com/DreamMaoMao/gitstatus.yazi.git $env:APPDATA\yazi\co
 Add this to ~/.config/yazi/init.lua
 
 ```
-require("gitstatus"):setup()
+require("message-custiom"):setup{
+    folder_size_ignore = {"/home/user"},
+    gitstatus_ignore = {"/home/user"}
+}
 ```
