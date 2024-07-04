@@ -75,29 +75,37 @@ return {
 			st.opt_enable_folder_size  = opts.enable_folder_size
 		end
 
-		function File:symlink(file)
+		function Folder:linemode(area, files)
+			local mode = cx.active.conf.linemode
+		
+			local lines = {}
 			local git_span = {}
-
-			if st.git_status_str ~= nil and st.git_status_str ~= "" then
-				local name = file.cha.is_dir and file.name:gsub("\r", "?", 1).."/" or file.name:gsub("\r", "?", 1)
-				if file:is_hovered() then
-					git_span = st.git_file_status[name] and {ui.Span(" ["),ui.Span(st.git_file_status[name]),ui.Span("]")}				
-				else
-					git_span = st.git_file_status[name] and {ui.Span(" ["):fg("#98ca65"),ui.Span(st.git_file_status[name]):fg("#98ca65"),ui.Span("]"):fg("#98ca65")}
+			for _, f in ipairs(files) do
+				local spans = { ui.Span(" ") }
+				if st.git_status_str ~= nil and st.git_status_str ~= "" then
+					local name = f.cha.is_dir and f.name:gsub("\r", "?", 1).."/" or f.name:gsub("\r", "?", 1)
+					if f:is_hovered() then
+						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name])	or ui.Span("✓"):fg("#98ca65")			
+					else
+						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name]):fg("#98ca65") or ui.Span("✓"):fg("#98ca65")		
+					end
 				end
+				if mode == "size" then
+					local size = f:size()
+					spans[#spans + 1] = ui.Span(size and ya.readable_size(size) or "")
+				elseif mode == "mtime" then
+					local time = f.cha.modified
+					spans[#spans + 1] = ui.Span(time and os.date("%y-%m-%d %H:%M", time // 1) or "")
+				elseif mode == "permissions" then
+					spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
+				end
+				
+				spans[#spans + 1] = ui.Span(" ")
+				spans[#spans + 1] = git_span
+				spans[#spans + 1] = ui.Span(" ")
+				lines[#lines + 1] = ui.Line(spans)
 			end
-
-			if not MANAGER.show_symlink and (st.git_status_str == nil or st.git_status_str == "") then
-				return {}
-			elseif not MANAGER.show_symlink and st.git_status_str ~= nil and st.git_status_str ~= "" then
-				return git_span
-			elseif MANAGER.show_symlink and st.git_status_str ~= nil and st.git_status_str ~= "" then
-				local to = file.link_to
-				return to and {git_span, ui.Span(" -> " .. tostring(to)):italic() } or {git_span}
-			else
-				local to = file.link_to
-				return to and { ui.Span(" -> " .. tostring(to)):italic() } or {}
-			end
+			return ui.Paragraph(area, lines):align(ui.Paragraph.RIGHT)
 		end
 
 		function Header:cwd(max)
