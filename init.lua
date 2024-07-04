@@ -8,6 +8,21 @@ local function string_split(input,delimiter)
 	return result
 end
 
+local function set_status_color(status)
+	if status == nil then
+		return "#6cc749"
+	elseif status == "M" then
+		return "#ec613f"
+	elseif status == "A" then
+		return "#ec613f"
+	elseif status == "I" then
+		return "#8a6ae5"
+	elseif status == "U" then
+		return "#D4BB91"
+	end
+	
+end
+
 local function make_git_table(git_status_str)
 	local file_table = {}
 	local git_status
@@ -84,10 +99,11 @@ return {
 				local spans = { ui.Span(" ") }
 				if st.git_status_str ~= nil and st.git_status_str ~= "" then
 					local name = f.cha.is_dir and f.name:gsub("\r", "?", 1).."/" or f.name:gsub("\r", "?", 1)
+					local color = set_status_color(st.git_file_status[name])
 					if f:is_hovered() then
 						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name]) or ui.Span("✓")	
 					else
-						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name]):fg("#98ca65") or ui.Span("✓"):fg("#98ca65")		
+						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name]):fg(color) or ui.Span("✓"):fg(color)		
 					end
 				end
 				if mode == "size" then
