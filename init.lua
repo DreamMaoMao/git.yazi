@@ -31,6 +31,8 @@ local function make_git_table(git_status_str)
 	local file_table = {}
 	local git_status
 	local is_dirty = false
+	local filename
+	local multi_path
 	local split_table = string_split(git_status_str:sub(1,-2),"\n")
 	for _, value in ipairs(split_table) do
 		split_value = string_split(value," ")
@@ -49,8 +51,11 @@ local function make_git_table(git_status_str)
 			git_status = split_value[#split_value - 1]
 			is_dirty = true
 		end
-		file_table[split_value[#split_value]] = git_status
+		multi_path = string_split(split_value[#split_value],"/")
+		filename = multi_path[1] and multi_path[1] or split_value[#split_value]
+		file_table[filename] = git_status
 	end
+
 	return file_table,is_dirty
 end
 
@@ -90,7 +95,7 @@ return {
 			function File:symlink(file)
 				local git_span = {}
 				if st.git_status_str ~= nil and st.git_status_str ~= "" then
-					local name = file.cha.is_dir and file.name:gsub("\r", "?", 1).."/" or file.name:gsub("\r", "?", 1)
+					local name = file.name:gsub("\r", "?", 1)
 					local color = set_status_color(st.git_file_status and st.git_file_status[name] or nil)
 
 					if file:is_hovered() then
@@ -121,7 +126,7 @@ return {
 				for _, f in ipairs(files) do
 					local spans = { ui.Span(" ") }
 					if st.git_branch ~= nil and st.git_branch ~= "" then
-						local name = f.cha.is_dir and f.name:gsub("\r", "?", 1).."/" or f.name:gsub("\r", "?", 1)
+						local name = f.name:gsub("\r", "?", 1)
 						local color = set_status_color(st.git_file_status and st.git_file_status[name] or nil)
 						if f:is_hovered() then
 							git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]) or ui.Span("✓")	
