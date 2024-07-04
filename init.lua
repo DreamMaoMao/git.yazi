@@ -19,6 +19,8 @@ local function set_status_color(status)
 		return "#8a6ae5"
 	elseif status == "U" then
 		return "#D4BB91"
+	else
+		return "#D4BB91"
 	end
 	
 end
