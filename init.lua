@@ -48,10 +48,9 @@ local function make_git_table(git_status_str)
 	return file_table,is_dirty
 end
 
-local save = ya.sync(function(st, cwd, git_branch,folder_size,git_file_status,git_is_dirty)
+local save = ya.sync(function(st, cwd, git_branch,git_file_status,git_is_dirty)
 	if cx.active.current.cwd == Url(cwd) then
 		st.git_branch = git_branch
-		st.folder_size = folder_size
 		st.git_file_status = git_file_status
 		st.git_is_dirty = git_is_dirty
 		ya.render()
@@ -60,25 +59,15 @@ end)
 
 local clear_state = ya.sync(function(st)
 	st.git_branch = ""
-	st.folder_size = ""
 	st.git_file_status = ""
 	st.git_is_dirty = ""
 	ya.render()
 end)
 
-local enable_file_size = ya.sync(function(st)
-	return st.opt_enable_folder_size
-end)
 
 local set_opts_default = ya.sync(function(state)
-	if (state.opt_folder_size_ignore == nil) then
-		state.opt_folder_size_ignore = {}
-	end
 	if (state.opt_gitstatus_ignore == nil) then
 		state.opt_gitstatus_ignore = {}
-	end
-	if (state.opt_enable_folder_size == nil) then
-		state.opt_enable_folder_size = false
 	end
 end)
 
@@ -87,14 +76,8 @@ return {
 
 		set_opts_default()
 
-		if (opts ~= nil and opts.folder_size_ignore ~= nil ) then
-			st.opt_folder_size_ignore  = opts.folder_size_ignore
-		end
 		if (opts ~= nil and opts.gitstatus_ignore ~= nil ) then
 			st.opt_gitstatus_ignore  = opts.gitstatus_ignore
-		end
-		if (opts ~= nil and opts.enable_folder_size ~= nil ) then
-			st.opt_enable_folder_size  = opts.enable_folder_size
 		end
 
 		function Folder:linemode(area, files)
@@ -134,14 +117,7 @@ return {
 		function Header:cwd(max)
 			local git_span = {}
 			local cwd = cx.active.current.cwd
-			local ignore_caculate_size = false
 			local ignore_gitstatus = false
-
-			for _, value in ipairs(st.opt_folder_size_ignore) do
-				if value == tostring(cwd) then
-					ignore_caculate_size = true
-				end
-			end
 
 			for _, value in ipairs(st.opt_gitstatus_ignore) do
 				if value == tostring(cwd) then
@@ -149,11 +125,10 @@ return {
 				end
 			end
 
-			local folder_size_span = (st.folder_size ~= nil and st.folder_size ~= "") and ui.Span(" [".. st.folder_size  .."]")  or {}
 			if st.cwd ~= cwd then
 				st.cwd = cwd
 				clear_state()
-				ya.manager_emit("plugin", { st._name, args = ya.quote(tostring(cwd)).." "..tostring(ignore_caculate_size).." ".. tostring(ignore_gitstatus) })
+				ya.manager_emit("plugin", { st._name, args = ya.quote(tostring(cwd)).." ".. tostring(ignore_gitstatus) })
 			else
 				local git_is_dirty = st.git_is_dirty  and "*" or ""
 				git_span = (st.git_branch and st.git_branch ~= "") and ui.Span(" <".. st.git_branch .. git_is_dirty .. ">"):fg("#c6ca4a") or {}				
@@ -161,7 +136,7 @@ return {
 
 			local s = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
 
-			return ui.Line{ui.Span(ya.truncate(s, { max = max, rtl = true }) ):style(THEME.manager.cwd),git_span,folder_size_span}
+			return ui.Line{ui.Span(ya.truncate(s, { max = max, rtl = true }) ):style(THEME.manager.cwd),git_span}
 		end
 	end,
 
@@ -170,7 +145,7 @@ return {
 		local git_is_dirty
 
 		local git_branch  = ""
-		if args[3] ~= "true" then
+		if args[2] ~= "true" then
 			local command = "git symbolic-ref HEAD 2> /dev/null" 
 			local file = io.popen(command, "r")
 			output = file:read("*a") 
@@ -186,7 +161,7 @@ return {
 		
 		local git_status_str = ""
 		local git_file_status = nil
-		if args[3] ~= "true" then
+		if args[2] ~= "true" then
 			local command = "git status --ignored -s --ignore-submodules=dirty 2> /dev/null" 
 			local file = io.popen(command, "r")
 			output = file:read("*a") 
@@ -199,17 +174,6 @@ return {
 			git_file_status,git_is_dirty = make_git_table(git_status_str)
 		end
 
-		local folder_size = ""
-		if args[2] ~= "true" and enable_file_size() then
-			output = Command("du"):args({"-sh",args[1].."/"}):output()
-		else
-			output = nil
-		end
-		if output then
-			local split_output = string_split(output.stdout,"\t")
-			folder_size = split_output[1]
-		end		
-
-		save(args[1], git_branch,folder_size,git_file_status,git_is_dirty)
+		save(args[1], git_branch,git_file_status,git_is_dirty)
 	end,
 }
