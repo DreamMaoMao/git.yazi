@@ -19,6 +19,8 @@ local function set_status_color(status)
 		return "#ae96ee"
 	elseif status == "U" then
 		return "#D4BB91"
+	elseif status == "R" then
+		return "#ec613f"
 	else
 		return "#D4BB91"
 	end
@@ -41,6 +43,8 @@ local function make_git_table(git_status_str)
 			is_dirty = true
 		elseif split_value[#split_value - 1] == "!!" then
 			git_status = "I"
+		elseif split_value[#split_value - 1] == "->" then
+			git_status = "R"
 		else
 			git_status = split_value[#split_value - 1]
 			is_dirty = true
