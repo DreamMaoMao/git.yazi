@@ -22,5 +22,7 @@ git clone https://github.com/DreamMaoMao/git-status.yazi.git ~/.config/yazi/plug
 Add this to ~/.config/yazi/init.lua
 
 ```
-require("git-status"):setup()
+require("git-status"):setup{
+    style = "beside" -- beside or linemode
+}
 ```

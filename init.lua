@@ -16,7 +16,7 @@ local function set_status_color(status)
 	elseif status == "A" then
 		return "#ec613f"
 	elseif status == "I" then
-		return "#8a6ae5"
+		return "#ae96ee"
 	elseif status == "U" then
 		return "#D4BB91"
 	else
@@ -50,11 +50,12 @@ local function make_git_table(git_status_str)
 	return file_table,is_dirty
 end
 
-local save = ya.sync(function(st, cwd, git_branch,git_file_status,git_is_dirty)
+local save = ya.sync(function(st, cwd, git_branch,git_file_status,git_is_dirty,git_status_str)
 	if cx.active.current.cwd == Url(cwd) then
 		st.git_branch = git_branch
 		st.git_file_status = git_file_status
 		st.git_is_dirty = git_is_dirty
+		st.git_status_str = git_status_str
 		ya.render()
 	end
 end)
@@ -66,43 +67,82 @@ local clear_state = ya.sync(function(st)
 	ya.render()
 end)
 
+local set_opts_default = ya.sync(function(state)
+	if (state.opt_style == nil) then
+		state.opt_style = "linemode"
+	end
+end)
+
+
 return {
 	setup = function(st,opts)
 
-		function Folder:linemode(area, files)
-			local mode = cx.active.conf.linemode
-		
-			local lines = {}
-			local git_span = {}
-			for _, f in ipairs(files) do
-				local spans = { ui.Span(" ") }
-				if st.git_branch ~= nil and st.git_branch ~= "" then
-					local name = f.cha.is_dir and f.name:gsub("\r", "?", 1).."/" or f.name:gsub("\r", "?", 1)
+		set_opts_default()
+		if (opts ~= nil and opts.style ~= nil ) then
+			st.opt_style  = opts.style
+		end		
+
+		if st.opt_style == "beside" then
+			function File:symlink(file)
+				local git_span = {}
+				if st.git_status_str ~= nil and st.git_status_str ~= "" then
+					local name = file.cha.is_dir and file.name:gsub("\r", "?", 1).."/" or file.name:gsub("\r", "?", 1)
 					local color = set_status_color(st.git_file_status and st.git_file_status[name] or nil)
-					if f:is_hovered() then
-						git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]) or ui.Span("✓")	
+
+					if file:is_hovered() then
+						git_span = st.git_file_status[name] and {ui.Span(" ["),ui.Span(st.git_file_status[name]),ui.Span("]")}				
 					else
-						git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]):fg(color) or ui.Span("✓"):fg(color)		
+						git_span = st.git_file_status[name] and {ui.Span(" ["):fg(color),ui.Span(st.git_file_status[name]):fg(color),ui.Span("]"):fg(color)}
 					end
 				end
-				if mode == "size" then
-					local size = f:size()
-					spans[#spans + 1] = ui.Span(size and ya.readable_size(size) or "")
-				elseif mode == "mtime" then
-					local time = f.cha.modified
-					spans[#spans + 1] = ui.Span(time and os.date("%y-%m-%d %H:%M", time // 1) or "")
-				elseif mode == "permissions" then
-					spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
-				end
-				
-				spans[#spans + 1] = ui.Span(" ")
-				spans[#spans + 1] = git_span
-				spans[#spans + 1] = ui.Span(" ")
-				lines[#lines + 1] = ui.Line(spans)
-			end
-			return ui.Paragraph(area, lines):align(ui.Paragraph.RIGHT)
-		end
 
+				if not MANAGER.show_symlink and (st.git_status_str == nil or st.git_status_str == "") then
+					return {}
+				elseif not MANAGER.show_symlink and st.git_status_str ~= nil and st.git_status_str ~= "" then
+					return git_span
+				elseif MANAGER.show_symlink and st.git_status_str ~= nil and st.git_status_str ~= "" then
+					local to = file.link_to
+					return to and {git_span, ui.Span(" -> " .. tostring(to)):italic() } or {git_span}
+				else
+					local to = file.link_to
+					return to and { ui.Span(" -> " .. tostring(to)):italic() } or {}
+				end
+			end
+		else
+			function Folder:linemode(area, files)
+				local mode = cx.active.conf.linemode
+			
+				local lines = {}
+				local git_span = {}
+				for _, f in ipairs(files) do
+					local spans = { ui.Span(" ") }
+					if st.git_branch ~= nil and st.git_branch ~= "" then
+						local name = f.cha.is_dir and f.name:gsub("\r", "?", 1).."/" or f.name:gsub("\r", "?", 1)
+						local color = set_status_color(st.git_file_status and st.git_file_status[name] or nil)
+						if f:is_hovered() then
+							git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]) or ui.Span("✓")	
+						else
+							git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]):fg(color) or ui.Span("✓"):fg(color)		
+						end
+					end
+					if mode == "size" then
+						local size = f:size()
+						spans[#spans + 1] = ui.Span(size and ya.readable_size(size) or "")
+					elseif mode == "mtime" then
+						local time = f.cha.modified
+						spans[#spans + 1] = ui.Span(time and os.date("%y-%m-%d %H:%M", time // 1) or "")
+					elseif mode == "permissions" then
+						spans[#spans + 1] = ui.Span(f.cha:permissions() or "")
+					end
+
+					spans[#spans + 1] = ui.Span(" ")
+					spans[#spans + 1] = git_span
+					spans[#spans + 1] = ui.Span(" ")
+					lines[#lines + 1] = ui.Line(spans)
+				end
+				return ui.Paragraph(area, lines):align(ui.Paragraph.RIGHT)
+			end
+		end
 		function Header:cwd(max)
 			local git_span = {}
 			local cwd = cx.active.current.cwd
@@ -152,6 +192,6 @@ return {
 			git_file_status,git_is_dirty = make_git_table(git_status_str)
 		end
 
-		save(args[1], git_branch,git_file_status,git_is_dirty)
+		save(args[1], git_branch,git_file_status,git_is_dirty,git_status_str)
 	end,
 }
