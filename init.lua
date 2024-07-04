@@ -48,10 +48,9 @@ local function make_git_table(git_status_str)
 	return file_table,is_dirty
 end
 
-local save = ya.sync(function(st, cwd, git_branch,git_status_str,folder_size,git_file_status,git_is_dirty)
+local save = ya.sync(function(st, cwd, git_branch,folder_size,git_file_status,git_is_dirty)
 	if cx.active.current.cwd == Url(cwd) then
 		st.git_branch = git_branch
-		st.git_status_str = git_status_str
 		st.folder_size = folder_size
 		st.git_file_status = git_file_status
 		st.git_is_dirty = git_is_dirty
@@ -97,13 +96,13 @@ return {
 			local git_span = {}
 			for _, f in ipairs(files) do
 				local spans = { ui.Span(" ") }
-				if st.git_status_str ~= nil and st.git_status_str ~= "" then
+				if st.git_branch ~= nil and st.git_branch ~= "" then
 					local name = f.cha.is_dir and f.name:gsub("\r", "?", 1).."/" or f.name:gsub("\r", "?", 1)
-					local color = set_status_color(st.git_file_status[name])
+					local color = set_status_color(st.git_file_status and st.git_file_status[name] or nil)
 					if f:is_hovered() then
-						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name]) or ui.Span("✓")	
+						git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]) or ui.Span("✓")	
 					else
-						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name]):fg(color) or ui.Span("✓"):fg(color)		
+						git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]):fg(color) or ui.Span("✓"):fg(color)		
 					end
 				end
 				if mode == "size" then
@@ -202,6 +201,6 @@ return {
 			folder_size = split_output[1]
 		end		
 
-		save(args[1], git_branch,git_status_str,folder_size,git_file_status,git_is_dirty)
+		save(args[1], git_branch,folder_size,git_file_status,git_is_dirty)
 	end,
 }
