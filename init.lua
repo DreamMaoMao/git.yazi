@@ -85,7 +85,7 @@ return {
 				if st.git_status_str ~= nil and st.git_status_str ~= "" then
 					local name = f.cha.is_dir and f.name:gsub("\r", "?", 1).."/" or f.name:gsub("\r", "?", 1)
 					if f:is_hovered() then
-						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name])	or ui.Span("✓"):fg("#98ca65")			
+						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name]) or ui.Span("✓")	
 					else
 						git_span = st.git_file_status[name] and ui.Span(st.git_file_status[name]):fg("#98ca65") or ui.Span("✓"):fg("#98ca65")		
 					end
