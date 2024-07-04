@@ -134,6 +134,8 @@ return {
 			local split_output = string_split(output:sub(1,-2),"/")
 			
 			git_branch = split_output[3]
+		else
+			return
 		end
 		
 		local git_status_str = ""
