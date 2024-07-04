@@ -58,6 +58,14 @@ local save = ya.sync(function(st, cwd, git_branch,folder_size,git_file_status,gi
 	end
 end)
 
+local clear_state = ya.sync(function(st)
+	st.git_branch = ""
+	st.folder_size = ""
+	st.git_file_status = ""
+	st.git_is_dirty = ""
+	ya.render()
+end)
+
 local enable_file_size = ya.sync(function(st)
 	return st.opt_enable_folder_size
 end)
@@ -144,6 +152,7 @@ return {
 			local folder_size_span = (st.folder_size ~= nil and st.folder_size ~= "") and ui.Span(" [".. st.folder_size  .."]")  or {}
 			if st.cwd ~= cwd then
 				st.cwd = cwd
+				clear_state()
 				ya.manager_emit("plugin", { st._name, args = ya.quote(tostring(cwd)).." "..tostring(ignore_caculate_size).." ".. tostring(ignore_gitstatus) })
 			else
 				local git_is_dirty = st.git_is_dirty  and "*" or ""
