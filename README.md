@@ -22,7 +22,5 @@ git clone https://github.com/DreamMaoMao/git-status.yazi.git ~/.config/yazi/plug
 Add this to ~/.config/yazi/init.lua
 
 ```
-require("git-status"):setup{
-    gitstatus_ignore = {"/home/user","/"},
-}
+require("git-status"):setup()
 ```

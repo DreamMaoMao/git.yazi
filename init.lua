@@ -64,21 +64,8 @@ local clear_state = ya.sync(function(st)
 	ya.render()
 end)
 
-
-local set_opts_default = ya.sync(function(state)
-	if (state.opt_gitstatus_ignore == nil) then
-		state.opt_gitstatus_ignore = {}
-	end
-end)
-
 return {
 	setup = function(st,opts)
-
-		set_opts_default()
-
-		if (opts ~= nil and opts.gitstatus_ignore ~= nil ) then
-			st.opt_gitstatus_ignore  = opts.gitstatus_ignore
-		end
 
 		function Folder:linemode(area, files)
 			local mode = cx.active.conf.linemode
@@ -117,18 +104,11 @@ return {
 		function Header:cwd(max)
 			local git_span = {}
 			local cwd = cx.active.current.cwd
-			local ignore_gitstatus = false
-
-			for _, value in ipairs(st.opt_gitstatus_ignore) do
-				if value == tostring(cwd) then
-					ignore_gitstatus = true
-				end
-			end
 
 			if st.cwd ~= cwd then
 				st.cwd = cwd
 				clear_state()
-				ya.manager_emit("plugin", { st._name, args = ya.quote(tostring(cwd)).." ".. tostring(ignore_gitstatus) })
+				ya.manager_emit("plugin", { st._name, args = ya.quote(tostring(cwd))})
 			else
 				local git_is_dirty = st.git_is_dirty  and "*" or ""
 				git_span = (st.git_branch and st.git_branch ~= "") and ui.Span(" <".. st.git_branch .. git_is_dirty .. ">"):fg("#c6ca4a") or {}				
@@ -145,14 +125,11 @@ return {
 		local git_is_dirty
 
 		local git_branch  = ""
-		if args[2] ~= "true" then
-			local command = "git symbolic-ref HEAD 2> /dev/null" 
-			local file = io.popen(command, "r")
-			output = file:read("*a") 
-			file:close()
-		else
-			output = nil
-		end
+		local command = "git symbolic-ref HEAD 2> /dev/null" 
+		local file = io.popen(command, "r")
+		output = file:read("*a") 
+		file:close()
+
 		if output ~= nil and  output ~= "" then
 			local split_output = string_split(output:sub(1,-2),"/")
 			
@@ -161,14 +138,11 @@ return {
 		
 		local git_status_str = ""
 		local git_file_status = nil
-		if args[2] ~= "true" then
-			local command = "git status --ignored -s --ignore-submodules=dirty 2> /dev/null" 
-			local file = io.popen(command, "r")
-			output = file:read("*a") 
-			file:close()
-		else
-			output = nil
-		end
+		local command = "git status --ignored -s --ignore-submodules=dirty 2> /dev/null" 
+		local file = io.popen(command, "r")
+		output = file:read("*a") 
+		file:close()
+
 		if output ~= nil and  output ~= "" then
 			git_status_str = output
 			git_file_status,git_is_dirty = make_git_table(git_status_str)
