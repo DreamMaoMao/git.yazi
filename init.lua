@@ -57,7 +57,12 @@ local function make_git_table(git_status_str)
 			return file_table,is_dirty,is_ignore_dir
 		end
 		multi_path = string_split(split_value[#split_value],"/")
-		filename = multi_path[1] and multi_path[1] or split_value[#split_value]
+		if (multi_path[#multi_path] == "" and #multi_path == 2) or git_status ~= "I" then
+			filename = multi_path[1]
+		else 
+			filename = split_value[#split_value]
+		end
+		
 		file_table[filename] = git_status
 	end
 
