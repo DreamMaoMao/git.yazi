@@ -33,6 +33,7 @@ local function make_git_table(git_status_str)
 	local is_dirty = false
 	local filename
 	local multi_path
+	local is_ignore_dir = false
 	local split_table = string_split(git_status_str:sub(1,-2),"\n")
 	for _, value in ipairs(split_table) do
 		split_value = string_split(value," ")
@@ -51,20 +52,25 @@ local function make_git_table(git_status_str)
 			git_status = split_value[#split_value - 1]
 			is_dirty = true
 		end
+		if split_value[#split_value]:sub(-2,-1) == "./" and git_status == "I" then
+			is_ignore_dir = true
+			return file_table,is_dirty,is_ignore_dir
+		end
 		multi_path = string_split(split_value[#split_value],"/")
 		filename = multi_path[1] and multi_path[1] or split_value[#split_value]
 		file_table[filename] = git_status
 	end
 
-	return file_table,is_dirty
+	return file_table,is_dirty,is_ignore_dir
 end
 
-local save = ya.sync(function(st, cwd, git_branch,git_file_status,git_is_dirty,git_status_str)
+local save = ya.sync(function(st, cwd, git_branch,git_file_status,git_is_dirty,git_status_str,is_ignore_dir)
 	if cx.active.current.cwd == Url(cwd) then
 		st.git_branch = git_branch
 		st.git_file_status = git_file_status
 		st.git_is_dirty = git_is_dirty
 		st.git_status_str = git_status_str
+		st.is_ignore_dir = is_ignore_dir
 		ya.render()
 	end
 end)
@@ -96,12 +102,12 @@ return {
 				local git_span = {}
 				if st.git_status_str ~= nil and st.git_status_str ~= "" then
 					local name = file.name:gsub("\r", "?", 1)
-					local color = set_status_color(st.git_file_status and st.git_file_status[name] or nil)
-
+					local git_status = st.is_ignore_dir and "I" or st.git_file_status[name]
+					local color = set_status_color(git_status)
 					if file:is_hovered() then
-						git_span = st.git_file_status[name] and {ui.Span(" ["),ui.Span(st.git_file_status[name]),ui.Span("]")}				
+						git_span = git_status and {ui.Span(" ["),ui.Span(git_status),ui.Span("]")}				
 					else
-						git_span = st.git_file_status[name] and {ui.Span(" ["):fg(color),ui.Span(st.git_file_status[name]):fg(color),ui.Span("]"):fg(color)}
+						git_span = git_status and {ui.Span(" ["):fg(color),ui.Span(git_status):fg(color),ui.Span("]"):fg(color)}
 					end
 				end
 
@@ -127,11 +133,12 @@ return {
 					local spans = { ui.Span(" ") }
 					if st.git_branch ~= nil and st.git_branch ~= "" then
 						local name = f.name:gsub("\r", "?", 1)
-						local color = set_status_color(st.git_file_status and st.git_file_status[name] or nil)
+						local git_status = st.is_ignore_dir and "I" or (st.git_file_status and st.git_file_status[name] or nil)
+						local color = set_status_color(git_status)
 						if f:is_hovered() then
-							git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]) or ui.Span("✓")	
+							git_span = (git_status) and ui.Span(git_status) or ui.Span("✓")	
 						else
-							git_span = (st.git_file_status and st.git_file_status[name]) and ui.Span(st.git_file_status[name]):fg(color) or ui.Span("✓"):fg(color)		
+							git_span = (git_status) and ui.Span(git_status):fg(color) or ui.Span("✓"):fg(color)		
 						end
 					end
 					if mode == "size" then
@@ -198,9 +205,9 @@ return {
 
 		if output ~= nil and  output ~= "" then
 			git_status_str = output
-			git_file_status,git_is_dirty = make_git_table(git_status_str)
+			git_file_status,git_is_dirty,is_ignore_dir = make_git_table(git_status_str)
 		end
 
-		save(args[1], git_branch,git_file_status,git_is_dirty,git_status_str)
+		save(args[1], git_branch,git_file_status,git_is_dirty,git_status_str,is_ignore_dir)
 	end,
 }
