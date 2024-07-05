@@ -165,7 +165,7 @@ return {
 			end
 		end
 		function Header:cwd(max)
-			local git_span = {}
+			local git_line = ui.Line {}
 			local cwd = cx.active.current.cwd
 
 			if st.cwd ~= cwd then
@@ -174,12 +174,11 @@ return {
 				ya.manager_emit("plugin", { st._name, args = ya.quote(tostring(cwd))})
 			else
 				local git_is_dirty = st.git_is_dirty  and "*" or ""
-				git_span = (st.git_branch and st.git_branch ~= "") and ui.Span(" <".. st.git_branch .. git_is_dirty .. ">"):fg("#c6ca4a") or {}				
+				git_line = (st.git_branch and st.git_branch ~= "") and ui.Line {ui.Span(" <".. st.git_branch .. git_is_dirty .. ">"):fg("#c6ca4a")} or ui.Line {}				
 			end
 
 			local s = ya.readable_path(tostring(cx.active.current.cwd)) .. self:flags()
-
-			return ui.Line{ui.Span(ya.truncate(s, { max = max, rtl = true }) ):style(THEME.manager.cwd),git_span}
+			return ui.Line{ui.Span(ya.truncate(s, { max = math.max(0,max - git_line:width()), rtl = true }) ):style(THEME.manager.cwd),git_line}
 		end
 	end,
 
