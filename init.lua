@@ -22,7 +22,7 @@ local function set_status_color(status)
 	elseif status == "R" then
 		return "#ec613f"
 	else
-		return "#D4BB91"
+		return "#ec613f"
 	end
 	
 end
