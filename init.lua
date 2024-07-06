@@ -110,7 +110,7 @@ local function update_git_status(files)
 	ya.manager_emit("plugin", { "git-status", args = ya.quote(tostring(pwd))})	
 end
 
-M = {
+local M = {
 	setup = function(st,opts)
 
 		set_opts_default()
