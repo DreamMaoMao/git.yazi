@@ -27,6 +27,13 @@ local function set_status_color(status)
 	
 end
 
+local function fix_str_ch(str)
+    local chinese_chars, num_replacements = str:gsub("\\(%d%d%d)", function (s)
+        return string.char(tonumber(s, 8))
+    end)
+    return num_replacements > 0 and chinese_chars:sub(2,-2) or chinese_chars
+end
+
 local function make_git_table(git_status_str)
 	local file_table = {}
 	local git_status
@@ -34,6 +41,7 @@ local function make_git_table(git_status_str)
 	local filename
 	local multi_path
 	local is_ignore_dir = false
+	local convert_name
 	local split_table = string_split(git_status_str:sub(1,-2),"\n")
 	for _, value in ipairs(split_table) do
 		split_value = string_split(value," ")
@@ -63,7 +71,8 @@ local function make_git_table(git_status_str)
 			filename = split_value[#split_value]
 		end
 		
-		file_table[filename] = git_status
+		convert_name = fix_str_ch(filename)
+		file_table[convert_name] = git_status
 	end
 
 	return file_table,is_dirty,is_ignore_dir
