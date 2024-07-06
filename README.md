@@ -32,6 +32,6 @@ Add this to ~/.config/yazi/yazi.toml, `below the exists [plugin] modules`, like 
 [plugin]
 
 fetchers = [
-	{ id = "git-status", name = "*", run = "git-status", prio = "low" },
+	{ id = "git-status", name = "*", run = "git-status", prio = "normal" },
 ]
 ```
