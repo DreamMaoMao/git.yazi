@@ -26,3 +26,12 @@ require("git-status"):setup{
     style = "beside" -- beside or linemode
 }
 ```
+if you want listen for file changes to automatically update the status.
+Add this to ~/.config/yazi/yazi.toml, `below the exists [plugin] modules`, like this
+```
+[plugin]
+
+fetchers = [
+	{ id = "git-status", name = "*", run = "git-status", prio = "low" },
+]
+```

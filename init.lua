@@ -102,8 +102,15 @@ local set_opts_default = ya.sync(function(state)
 	end
 end)
 
+local function update_git_status(files)
+	local filemane = tostring((files[1]).url)
+	local str = filemane:sub(-1,-1) == "/" and filemane:sub(1,-2) or filemane
+	local pattern = "(.+)/[^/]+$"
+	local pwd = string.match(str, pattern)
+	ya.manager_emit("plugin", { "git-status", args = ya.quote(tostring(pwd))})	
+end
 
-return {
+M = {
 	setup = function(st,opts)
 
 		set_opts_default()
@@ -224,3 +231,10 @@ return {
 		save(args[1], git_branch,git_file_status,git_is_dirty,git_status_str,is_ignore_dir)
 	end,
 }
+
+function M:fetch()
+	update_git_status(self.files)	
+	return 3	
+end
+
+return M
