@@ -110,6 +110,11 @@ local function update_git_status(files)
 	ya.manager_emit("plugin", { "git-status", args = ya.quote(tostring(pwd))})	
 end
 
+local is_in_git_dir = ya.sync(function(st)
+	return (st.git_branch ~= nil and st.git_branch ~= "") and true or false
+end)
+
+
 local M = {
 	setup = function(st,opts)
 
@@ -227,13 +232,14 @@ local M = {
 			git_status_str = output
 			git_file_status,git_is_dirty,is_ignore_dir = make_git_table(git_status_str)
 		end
-
 		save(args[1], git_branch,git_file_status,git_is_dirty,git_status_str,is_ignore_dir)
 	end,
 }
 
 function M:fetch()
-	update_git_status(self.files)	
+	if is_in_git_dir() then
+		update_git_status(self.files)	
+	end
 	return 3	
 end
 
