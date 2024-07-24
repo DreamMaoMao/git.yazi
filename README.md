@@ -29,7 +29,6 @@ Add this to ~/.config/yazi/init.lua
 
 ```
 require("git-status"):setup{
-    style = "beside" -- beside or linemode
 }
 ```
 if you want listen for file changes to automatically update the status.
