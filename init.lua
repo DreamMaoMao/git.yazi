@@ -124,7 +124,6 @@ end)
 
 local handle_path_change = ya.sync(function(st)
 	local cwd = cx.active.current.cwd
-
 	if st.cwd ~= cwd then
 		st.cwd = cwd
 		clear_state()
