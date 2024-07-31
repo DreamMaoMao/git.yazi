@@ -37,7 +37,7 @@ Add this to ~/.config/yazi/yazi.toml, `below the exists [plugin] modules`, like 
 [plugin]
 
 fetchers = [
-	{ id = "git", name = "*", run = "git",if = "!mime", prio = "normal" },
-	{ id = "git", name = "*/", run = "git",if = "mime", prio = "normal" },
+	{ id = "git", name = "*", run = "git", prio = "normal" },
+	{ id = "git", name = "*/", run = "git", prio = "normal" },
 ]
 ```
