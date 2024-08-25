@@ -15,9 +15,9 @@ local function set_status_color(status)
 		return "#ec613f"
 	elseif status == "A" then
 		return "#ec613f"
-	elseif status == "I" then
+	elseif status == "." then
 		return "#ae96ee"
-	elseif status == "U" then
+	elseif status == "?" then
 		return "#D4BB91"
 	elseif status == "R" then
 		return "#ec613f"
@@ -51,10 +51,10 @@ local function make_git_table(git_status_str)
 		end
 
 		if split_value[#split_value - 1] == "??" then 
-			git_status = "U"
+			git_status = "?"
 			is_dirty = true
 		elseif split_value[#split_value - 1] == "!!" then
-			git_status = "I"
+			git_status = "."
 		elseif split_value[#split_value - 1] == "->" then
 			git_status = "R"
 			is_dirty = true
@@ -62,18 +62,18 @@ local function make_git_table(git_status_str)
 			git_status = split_value[#split_value - 1]
 			is_dirty = true
 		end
-		if split_value[#split_value]:sub(-2,-1) == "./" and git_status == "I" then
+		if split_value[#split_value]:sub(-2,-1) == "./" and git_status == "." then
 			is_ignore_dir = true
 			return file_table,is_dirty,is_ignore_dir,is_untracked_dir
 		end
 
-		if split_value[#split_value]:sub(-2,-1) == "./" and git_status == "U" then
+		if split_value[#split_value]:sub(-2,-1) == "./" and git_status == "?" then
 			is_untracked_dir = true
 			return file_table,is_dirty,is_ignore_dir,is_untracked_dir
 		end
 
 		multi_path = string_split(split_value[#split_value],"/")
-		if (multi_path[#multi_path] == "" and #multi_path == 2) or git_status ~= "I" then
+		if (multi_path[#multi_path] == "" and #multi_path == 2) or git_status ~= "." then
 			filename = multi_path[1]
 		else 
 			filename = split_value[#split_value]
@@ -142,9 +142,9 @@ local M = {
 			if st.git_branch ~= nil and st.git_branch ~= "" then
 				local name = f.name:gsub("\r", "?", 1)
 				if st.is_ignore_dir then
-					git_status = "I"
+					git_status = "."
 				elseif st.is_untracked_dir then
-					git_status = "U"
+					git_status = "?"
 				elseif st.git_file_status and st.git_file_status[name] then
 					git_status = st.git_file_status[name]
 				else 
