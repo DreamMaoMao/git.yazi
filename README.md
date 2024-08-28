@@ -28,8 +28,9 @@ git clone https://gitee.com/DreamMaoMao/git.yazi.git ~/.config/yazi/plugins/git.
 Add this to ~/.config/yazi/init.lua
 
 ```
-require("git"):setup{
-}
+require("git"):setup({
+    show_branch = true
+})
 ```
 if you want listen for file changes to automatically update the status.
 Add this to ~/.config/yazi/yazi.toml, `below the exists [plugin] modules`, like this
