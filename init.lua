@@ -122,15 +122,6 @@ local flush_empty_folder_status = ya.sync(function(st)
 	end
 end)
 
-local handle_path_change = ya.sync(function(st)
-	local cwd = cx.active.current.cwd
-	if st.cwd ~= cwd then
-		st.cwd = cwd
-		clear_state()
-		ya.manager_emit("plugin", { "git", args = ya.quote(tostring(cwd))})		
-	end
-end)
-
 local set_opts_default = ya.sync(function(state,opts)
 	if (opts ~= nil and opts.show_brach ~= nil) then
 		state.opt_show_brach = opts.show_brach
@@ -171,6 +162,19 @@ local M = {
 		end
 		Linemode:children_add(linemode_git,8000)
 
+		-- add a nil module to header to detect cwd change
+		local function cwd_change_detect(self)
+			local cwd = cx.active.current.cwd
+			if st.cwd ~= cwd then
+				st.cwd = cwd
+				clear_state()
+				ya.manager_emit("plugin", { "git", args = ya.quote(tostring(cwd))})		
+			end
+			return {}				
+		end
+		Header:children_add(cwd_change_detect,8000,Header.LEFT)
+
+		-- add git branch status in header 
 		local function header_git(self)
 			return (st.git_branch and st.git_branch ~= "") and ui.Line {ui.Span(" <".. st.git_branch .. st.git_is_dirty .. ">"):fg("#f6a6da")} or ui.Line {}				
 		end
@@ -178,7 +182,7 @@ local M = {
 			Header:children_add(header_git,1400,Header.LEFT)
 		end
 
-		ps.sub("cd",handle_path_change)
+		-- if delete all file in folder,hander status update
 		ps.sub("delete",flush_empty_folder_status)
 		ps.sub("trash",flush_empty_folder_status)
 	end,
