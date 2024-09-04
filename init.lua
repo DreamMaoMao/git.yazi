@@ -195,11 +195,12 @@ local M = {
 		local is_ignore_dir,is_untracked_dir
 
 		local git_branch
-		local command = "git symbolic-ref HEAD 2> /dev/null" 
-		local file = io.popen(command, "r")
-		output = file:read("*a") 
-		file:close()
+		local result, _ = Command("git")
+		:args({ "symbolic-ref", "HEAD" })
+		:stdout(Command.PIPED)
+		:output()
 
+		output = result.stdout
 		if output ~= nil and  output ~= "" then
 			local split_output = string_split(output:sub(1,-2),"/")
 			
@@ -212,11 +213,12 @@ local M = {
 		
 		local git_status_str = ""
 		local git_file_status = nil
-		local command = "git status --ignored -s --ignore-submodules=dirty 2> /dev/null" 
-		local file = io.popen(command, "r")
-		output = file:read("*a") 
-		file:close()
+		local result, _ = Command("git")
+		:args({ "status", "--ignored", "-s", "--ignore-submodules=dirty" })
+		:stdout(Command.PIPED)
+		:output()
 
+		output = result.stdout
 		if output ~= nil and  output ~= "" then
 			git_status_str = output
 			git_file_status,git_is_dirty,is_ignore_dir,is_untracked_dir = make_git_table(git_status_str)
