@@ -8,6 +8,18 @@ local function string_split(input,delimiter)
 	return result
 end
 
+local function split_label_filename(str)
+    local first, rest = str:match"^%s*(%S+)%s*(.*)"
+    return first, rest
+end
+
+local function fix_str_ch(str)
+    local chinese_chars, num_replacements = str:gsub("\\(%d%d%d)", function (s)
+        return string.char(tonumber(s, 8))
+    end)
+    return num_replacements > 0 and chinese_chars:sub(2,-2) or chinese_chars
+end
+
 local function set_status_color(status)
 	if status == nil then
 		return "#6cc749"
@@ -27,58 +39,47 @@ local function set_status_color(status)
 	
 end
 
-local function fix_str_ch(str)
-    local chinese_chars, num_replacements = str:gsub("\\(%d%d%d)", function (s)
-        return string.char(tonumber(s, 8))
-    end)
-    return num_replacements > 0 and chinese_chars:sub(2,-2) or chinese_chars
-end
-
 local function make_git_table(git_status_str)
 	local file_table = {}
 	local git_status
 	local is_dirty = false
-	local filename
 	local multi_path
 	local is_ignore_dir = false
 	local is_untracked_dir = false
-	local convert_name
+	local label,filename,convert_name
 	local split_table = string_split(git_status_str:sub(1,-2),"\n")
 	for _, value in ipairs(split_table) do
-		split_value = string_split(value," ")
-		if split_value[#split_value - 1] == "" then
-			split_value = string_split(value,"  ")
-		end
+		label,filename = split_label_filename(value)
 
-		if split_value[#split_value - 1] == "??" then 
+		if label == "??" then 
 			git_status = "?"
 			is_dirty = true
-		elseif split_value[#split_value - 1] == "!!" then
+		elseif label == "!!" then
 			git_status = "."
-		elseif split_value[#split_value - 1] == "->" then
+		elseif label == "->" then
 			git_status = "R"
 			is_dirty = true
 		else
-			git_status = split_value[#split_value - 1]
+			git_status = label
 			is_dirty = true
 		end
-		if split_value[#split_value]:sub(-2,-1) == "./" and git_status == "." then
+		if filename:sub(-2,-1) == "./" and git_status == "." then
 			is_ignore_dir = true
 			return file_table,is_dirty,is_ignore_dir,is_untracked_dir
 		end
 
-		if split_value[#split_value]:sub(-2,-1) == "./" and git_status == "?" then
+		if filename:sub(-2,-1) == "./" and git_status == "?" then
 			is_untracked_dir = true
 			return file_table,is_dirty,is_ignore_dir,is_untracked_dir
 		end
 
-		multi_path = string_split(split_value[#split_value],"/")
+		multi_path = string_split(filename,"/")
 		if (multi_path[#multi_path] == "" and #multi_path == 2) or git_status ~= "." then
 			filename = multi_path[1]
 		else 
-			filename = split_value[#split_value]
+			filename = filename
 		end
-		
+
 		convert_name = fix_str_ch(filename)
 		file_table[convert_name] = git_status
 	end
@@ -86,16 +87,14 @@ local function make_git_table(git_status_str)
 	return file_table,is_dirty,is_ignore_dir,is_untracked_dir
 end
 
-local save = ya.sync(function(st, cwd, git_branch,git_file_status,git_is_dirty,git_status_str,is_ignore_dir,is_untracked_dir)
-	if cx.active.current.cwd == Url(cwd) then
-		st.git_branch = git_branch
-		st.git_file_status = git_file_status
-		st.git_is_dirty = git_is_dirty and "*" or ""
-		st.git_status_str = git_status_str
-		st.is_ignore_dir = is_ignore_dir
-		st.is_untracked_dir= is_untracked_dir
-		ya.render()
-	end
+local save = ya.sync(function(st, git_branch,git_file_status,git_is_dirty,git_status_str,is_ignore_dir,is_untracked_dir)
+	st.git_branch = git_branch
+	st.git_file_status = git_file_status
+	st.git_is_dirty = git_is_dirty and "*" or ""
+	st.git_status_str = git_status_str
+	st.is_ignore_dir = is_ignore_dir
+	st.is_untracked_dir= is_untracked_dir
+	ya.render()
 end)
 
 local clear_state = ya.sync(function(st)
@@ -106,7 +105,7 @@ local clear_state = ya.sync(function(st)
 end)
 
 local function update_git_status(path)
-	ya.manager_emit("plugin", { "git", args = ya.quote(tostring(path))})	
+	ya.manager_emit("plugin", { "git"})	
 end
 
 local is_in_git_dir = ya.sync(function(st)
@@ -168,7 +167,7 @@ local M = {
 			if st.cwd ~= cwd then
 				st.cwd = cwd
 				clear_state()
-				ya.manager_emit("plugin", { "git", args = ya.quote(tostring(cwd))})		
+				ya.manager_emit("plugin", { "git"})		
 			end
 			return {}				
 		end
@@ -187,7 +186,7 @@ local M = {
 		ps.sub("trash",flush_empty_folder_status)
 	end,
 
-	entry = function(_, args)
+	entry = function(_, _)
 		set_opts_default()
 
 		local output
@@ -223,7 +222,7 @@ local M = {
 			git_status_str = output
 			git_file_status,git_is_dirty,is_ignore_dir,is_untracked_dir = make_git_table(git_status_str)
 		end
-		save(args[1], git_branch,git_file_status,git_is_dirty,git_status_str,is_ignore_dir,is_untracked_dir)
+		save(git_branch,git_file_status,git_is_dirty,git_status_str,is_ignore_dir,is_untracked_dir)
 	end,
 }
 
