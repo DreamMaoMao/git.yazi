@@ -13,13 +13,6 @@ local function split_label_filename(str)
     return first, rest
 end
 
-local function fix_str_ch(str)
-    local chinese_chars, num_replacements = str:gsub("\\(%d%d%d)", function (s)
-        return string.char(tonumber(s, 8))
-    end)
-    return num_replacements > 0 and chinese_chars:sub(2,-2) or chinese_chars
-end
-
 local function set_status_color(status)
 	if status == nil then
 		return "#6cc749"
@@ -80,8 +73,7 @@ local function make_git_table(git_status_str)
 			filename = filename
 		end
 
-		convert_name = fix_str_ch(filename)
-		file_table[convert_name] = git_status
+		file_table[filename] = git_status
 	end
 
 	return file_table,is_dirty,is_ignore_dir,is_untracked_dir
@@ -213,7 +205,7 @@ local M = {
 		local git_status_str = ""
 		local git_file_status = nil
 		local result, _ = Command("git")
-		:args({ "status", "--ignored", "-s", "--ignore-submodules=dirty" })
+		:args({ "-c", "core.quotePath=", "status", "--ignored", "-s", "--ignore-submodules=dirty" })
 		:stdout(Command.PIPED)
 		:output()
 
