@@ -205,7 +205,7 @@ local M = {
 		local git_status_str = ""
 		local git_file_status = nil
 		local result, _ = Command("git")
-		:args({ "-c", "core.quotePath=", "status", "--ignored", "-s", "--ignore-submodules=dirty" })
+		:args({ "--no-optional-locks","-c", "core.quotePath=", "status", "--ignored", "-s", "--ignore-submodules=dirty" })
 		:stdout(Command.PIPED)
 		:output()
 
